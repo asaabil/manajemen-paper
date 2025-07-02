@@ -1,48 +1,60 @@
-        const express = require('express');
-        const router = express.Router();
+    const express = require('express');
+    const router = express.Router();
+    const auth = require('../middleware/auth');
+    const multer = require('multer');
+    const path = require('path'); // Impor 'path' untuk mengambil ekstensi file
 
-        // Panggil "Satpam" kita
-        const auth = require('../middleware/auth');
+    const Paper = require('../models/Paper');
+    const User = require('../models/User');
 
-        // Panggil Model
-        const Paper = require('../models/Paper');
-        const User = require('../models/User');
+    // --- [*] UBAH KONFIGURASI MULTER DI SINI ---
+    // Konfigurasi penyimpanan yang lebih detail
+    const storage = multer.diskStorage({
+      destination: function (req, file, cb) {
+        cb(null, 'uploads/'); // Tetap simpan di folder 'uploads'
+      },
+      filename: function (req, file, cb) {
+        // Buat nama file unik: nama field + timestamp + ekstensi asli
+        cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
+      }
+    });
 
-        // @route   POST api/papers
-        // @desc    Membuat/Mengunggah paper baru
-        // @access  Private (hanya untuk Dosen)
-        router.post('/', auth, async (req, res) => {
-          // 1. Ambil data paper dari body request
-          const { title, abstract, authors, publicationYear } = req.body;
+    const upload = multer({ storage: storage });
+    // --- SAMPAI SINI ---
 
-          try {
-            // 2. Cek peran user yang sedang login (dari token)
-            // Kita sudah punya akses ke req.user.id dari middleware 'auth'
-            const user = await User.findById(req.user.id);
-            if (user.role !== 'Dosen') {
-              return res.status(403).json({ msg: 'Akses ditolak. Hanya Dosen yang bisa mengunggah paper.' });
-            }
+    // @route   POST api/papers
+    // @desc    Membuat/Mengunggah paper baru
+    // @access  Private (hanya untuk Dosen)
+    router.post('/', [auth, upload.single('paperFile')], async (req, res) => {
+      const { title, abstract, authors, publicationYear } = req.body;
 
-            // 3. Buat objek paper baru
-            const newPaper = new Paper({
-              title,
-              abstract,
-              authors,
-              publicationYear,
-              user: req.user.id // <-- Hubungkan paper dengan ID user yang login
-            });
+      try {
+        const user = await User.findById(req.user.id);
+        if (user.role !== 'Dosen') {
+          return res.status(403).json({ msg: 'Akses ditolak. Hanya Dosen yang bisa mengunggah paper.' });
+        }
 
-            // 4. Simpan ke database
-            const paper = await newPaper.save();
+        if (!req.file) {
+            return res.status(400).json({ msg: 'File paper wajib diunggah.' });
+        }
 
-            // 5. Kirim data paper yang baru dibuat sebagai respons
-            res.json(paper);
-
-          } catch (err) {
-            console.error(err.message);
-            res.status(500).send('Server Error');
-          }
+        const newPaper = new Paper({
+          title,
+          abstract,
+          authors: JSON.parse(authors),
+          publicationYear,
+          user: req.user.id,
+          filePath: req.file.path.replace(/\\/g, "/") // Ganti backslash jadi forward slash untuk konsistensi
         });
+
+        const paper = await newPaper.save();
+        res.json(paper);
+
+      } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+      }
+    });
 
         // @route   GET api/papers
 // @desc    Mengambil semua paper
