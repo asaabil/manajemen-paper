@@ -1,21 +1,21 @@
-import React from 'react';
-import { Navigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+    import React from 'react';
+    import { Navigate } from 'react-router-dom';
+    import { useAuth } from '../context/AuthContext';
 
-const DosenRoute = ({ children }) => {
-  const { isAuthenticated, user, loading } = useAuth();
+    const DosenRoute = ({ children }) => {
+      const { isAuthenticated, user, loading } = useAuth();
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+      if (loading) {
+        return <div>Loading...</div>;
+      }
 
-  // Jika sudah login DAN perannya adalah Dosen
-  if (isAuthenticated && user.role === 'Dosen') {
-    return children; // Izinkan masuk
-  }
+      // [*] Tambahkan pengecekan 'user' di sini
+      if (isAuthenticated && user && user.role === 'Dosen') {
+        return children;
+      }
 
-  // Jika tidak, tendang ke halaman utama
-  return <Navigate to="/" />;
-};
+      return <Navigate to="/" />;
+    };
 
-export default DosenRoute;
+    export default DosenRoute;
+    

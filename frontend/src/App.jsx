@@ -5,14 +5,15 @@ import { useAuth } from './context/AuthContext';
 // Impor komponen dan halaman
 import Navbar from './components/Navbar';
 import PrivateRoute from './components/PrivateRoute';
+import DosenRoute from './components/DosenRoute';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import PapersListPage from './pages/PapersListPage';
-import PaperDetailPage from './pages/PaperDetailPage'; // <-- 1. Impor halaman baru
-import DosenRoute from './components/DosenRoute'; // <-- Impor penjaga baru
+import PaperDetailPage from './pages/PaperDetailPage';
 import UploadPaperPage from './pages/UploadPaperPage';
+import EditPaperPage from './pages/EditPaperPage'; // <-- 1. TAMBAHKAN IMPOR INI
 
 function App() {
   const { loadUser } = useAuth();
@@ -32,9 +33,9 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/papers" element={<PapersListPage />} />
-          <Route path="/papers/:id" element={<PaperDetailPage />} /> {/* <-- 2. Tambahkan rute baru */}
+          <Route path="/papers/:id" element={<PaperDetailPage />} />
 
-          {/* Rute Privat */}
+          {/* Rute Privat Umum */}
           <Route
             path="/dashboard"
             element={
@@ -49,7 +50,11 @@ function App() {
             path="/upload-paper" 
             element={<DosenRoute><UploadPaperPage /></DosenRoute>} 
           />
-          
+          {/* 2. TAMBAHKAN RUTE BARU DI BAWAH INI */}
+          <Route 
+            path="/papers/:id/edit" 
+            element={<DosenRoute><EditPaperPage /></DosenRoute>} 
+          />
         </Routes>
       </main>
     </div>

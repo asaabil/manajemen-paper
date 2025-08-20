@@ -14,47 +14,52 @@
     export const PaperProvider = ({ children }) => {
       const [state, dispatch] = useReducer(paperReducer, initialState);
 
-      // --- Kumpulan Aksi untuk Paper ---
-
-      // Aksi: Mengambil semua paper
       const getPapers = async () => {
+        dispatch({ type: 'SET_LOADING' });
         try {
           const res = await axios.get('/api/papers');
-          dispatch({
-            type: 'GET_PAPERS_SUCCESS',
-            payload: res.data,
-          });
+          dispatch({ type: 'GET_PAPERS_SUCCESS', payload: res.data });
         } catch (err) {
-          dispatch({
-            type: 'PAPER_ERROR',
-            payload: err.response.data.msg,
-          });
+          dispatch({ type: 'PAPER_ERROR', payload: err.response.data.msg });
         }
       };
 
-      // [*] Ubah fungsi createPaper
-      const createPaper = async (uploadData) => {
-        // Siapkan header khusus untuk file upload
-        const config = {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          }
-        };
+      const createPaper = async (uploadData) => { /* ...kode tidak berubah... */ };
 
+      const deletePaper = async (id) => {
+        if (window.confirm('Apakah Anda yakin ingin menghapus paper ini?')) {
+          try {
+            await axios.delete(`/api/papers/${id}`);
+            dispatch({ type: 'DELETE_PAPER_SUCCESS', payload: id });
+            alert('Paper berhasil dihapus.');
+            return true;
+          } catch (err) {
+            dispatch({ type: 'PAPER_ERROR', payload: err.response.data.msg });
+            alert('Gagal menghapus paper: ' + err.response.data.msg);
+            return false;
+          }
+        }
+        return false;
+      };
+
+      // [+] TAMBAHKAN FUNGSI DI BAWAH INI
+      // Aksi: Mengupdate paper
+      const updatePaper = async (id, formData) => {
         try {
-          // Kirim FormData dengan config khusus
-          const res = await axios.post('/api/papers', uploadData, config);
+          const res = await axios.put(`/api/papers/${id}`, formData);
           dispatch({
-            type: 'CREATE_PAPER_SUCCESS',
+            type: 'UPDATE_PAPER_SUCCESS',
             payload: res.data,
           });
-          alert('Paper berhasil diunggah!');
+          alert('Paper berhasil diperbarui.');
+          return true; // Beri sinyal sukses
         } catch (err) {
           dispatch({
             type: 'PAPER_ERROR',
             payload: err.response.data.msg,
           });
-          alert('Gagal mengunggah paper: ' + err.response.data.msg);
+          alert('Gagal memperbarui paper: ' + err.response.data.msg);
+          return false; // Beri sinyal gagal
         }
       };
 
@@ -64,6 +69,8 @@
             ...state,
             getPapers,
             createPaper,
+            deletePaper,
+            updatePaper, // <-- [*] Sediakan fungsi baru ini
           }}
         >
           {children}

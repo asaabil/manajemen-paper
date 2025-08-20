@@ -1,40 +1,61 @@
     import React, { useEffect } from 'react';
     import { Link } from 'react-router-dom';
-    import { usePaper } from '../context/PaperContext'; // <-- 1. Panggil "shortcut" ke kantor paper
+    import { usePaper } from '../context/PaperContext';
+    import {
+      Card,
+      CardContent,
+      CardDescription,
+      CardHeader,
+      CardTitle,
+    } from "@/components/ui/card"; // <-- Impor komponen Card
 
     const PapersListPage = () => {
-      // 2. Ambil semua yang kita butuhkan dari "kantor pusat" paper
       const { papers, loading, getPapers } = usePaper();
 
-      // 3. Gunakan useEffect untuk mengambil data saat komponen pertama kali dimuat
       useEffect(() => {
         getPapers();
         // eslint-disable-next-line
-      }, []); // Array dependensi kosong memastikan ini hanya berjalan sekali
+      }, []);
 
-      // Tampilkan pesan loading jika data belum siap
       if (loading) {
-        return <div>Loading paper...</div>;
+        return <div className="container mx-auto p-4">Loading paper...</div>;
       }
 
-      // Tampilkan daftar paper jika sudah siap
       return (
-        <div>
-          <h2>Daftar Semua Paper</h2>
+        <div className="container mx-auto p-4 md:p-8">
+          <h1 className="text-3xl font-bold mb-6">Perpustakaan Paper</h1>
+          
           {papers.length > 0 ? (
-            <ul>
+            // Gunakan CSS Grid untuk layout kartu yang responsif
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {papers.map((paper) => (
-                <li key={paper._id}>
-                  <Link to={`/papers/${paper._id}`}>
-                    <h3>{paper.title}</h3>
-                  </Link>
-                  <p>Tahun: {paper.publicationYear}</p>
-                  <p>Penulis: {paper.authors.join(', ')}</p>
-                </li>
+                // Setiap paper sekarang adalah sebuah Card
+                <Card key={paper._id} className="flex flex-col">
+                  <CardHeader>
+                    <CardTitle className="hover:text-primary">
+                      <Link to={`/papers/${paper._id}`}>
+                        {paper.title}
+                      </Link>
+                    </CardTitle>
+                    <CardDescription>
+                      {paper.authors.join(', ')} - {paper.publicationYear}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="flex-grow">
+                    <p className="text-sm text-muted-foreground line-clamp-3">
+                      {paper.abstract}
+                    </p>
+                  </CardContent>
+                </Card>
               ))}
-            </ul>
+            </div>
           ) : (
-            <p>Belum ada paper yang diunggah.</p>
+            <div className="text-center py-16">
+              <h2 className="text-xl font-semibold">Belum Ada Paper</h2>
+              <p className="text-muted-foreground mt-2">
+                Saat ini belum ada paper yang diunggah. Jadilah yang pertama!
+              </p>
+            </div>
           )}
         </div>
       );
